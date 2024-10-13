@@ -1,11 +1,9 @@
 import chainlit as cl
-from config import (
-    get_content_for_starter,
-    get_model_for_profile,
-    prompt_dict,
-    CHAT_SETTINGS,
-    LLM,
-)
+from config import (get_content_for_starter, 
+                    get_model_for_profile, 
+                    prompt_dict, 
+                    CHAT_SETTINGS, 
+                    LLM)
 from utils.logger import logger
 from chainlit.config import config
 
@@ -13,7 +11,7 @@ from chainlit.config import config
 @cl.on_chat_start
 def start_chat():
     cl.user_session.set("is_new_session", True)
-
+    
 # Construct a new conversation setting system prompt.
 async def handle_new_session(user_input: str):
     matched = False
@@ -23,11 +21,11 @@ async def handle_new_session(user_input: str):
             content = get_content_for_starter(starter.label)
             cl.user_session.set("message_history", [{"role": "system", "content": content}])
             break
-
+    
     if not matched:
         default_prompt = next(iter(prompt_dict.values()), "Can I help you?")
         cl.user_session.set("message_history", [{"role": "system", "content": default_prompt}])
-
+    
     cl.user_session.set("is_new_session", False)
 
 # main logic ,receive message will call this function
@@ -35,16 +33,21 @@ async def handle_new_session(user_input: str):
 async def main(message: cl.Message):
     is_new_session = cl.user_session.get("is_new_session", False)
 
-    # If it is a new session, get prompt
-    if is_new_session:
-        await handle_new_session(message.content)
-
     # Get and update message history
     message_history = cl.user_session.get("message_history")
+
+    
+    # If it is a new session, get prompt
+    if message_history is None or is_new_session:
+        await handle_new_session(message.content)
+        message_history = cl.user_session.get("message_history")
+        logger.info("Start a new session or initialize if not yet.")
+
+
+    # Append user_message to history
     message_history.append({"role": "user", "content": message.content})
     logger.info(f"Message History: {message_history}")
 
-    # ready stream message
     msg = cl.Message(content="")
     await msg.send()
 
