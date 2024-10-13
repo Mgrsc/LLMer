@@ -1,0 +1,67 @@
+OPENAI_API_KEY = "sk-xxxxxxxxxxxxxxxxxxx"
+OPENAI_BASE_URL = "https://api.example.com/v1"
+LOGGING_ENABLED = true
+LOG_DIR = "../logs"
+
+[CHAT_SETTINGS]
+temperature = 0
+max_tokens = 4096
+top_p = 1
+frequency_penalty = 0
+presence_penalty = 0
+
+[MODEL_MAP]
+
+[MODEL_MAP."Model-A"]
+profile_name = "Model A"
+model_name = "model-a"
+markdown_description = "Description of Model A"
+icon = "/public/model/model-a.svg"
+
+[MODEL_MAP."Model-B"]
+profile_name = "Model B"
+model_name = "model-b"
+markdown_description = "Description of Model B"
+icon = "/public/model/model-b.webp"
+
+
+[STARTERS]
+START_1_LABEL = "Starter 1"
+START_1_MESSAGE = "Hello, how can I help you?"
+START_1_ICON = "/public/icons/starter1.webp"
+
+START_2_LABEL = "Starter 2"
+START_2_MESSAGE = "What would you like to know?"
+START_2_ICON = "/public/icons/starter2.webp"
+
+START_3_LABEL = "Starter 3"
+START_3_MESSAGE = "Let's get started!"
+START_3_ICON = "/public/icons/starter3.webp"
+
+START_4_LABEL = "Starter 4"
+START_4_MESSAGE = "How may I assist you today?"
+START_4_ICON = "/public/icons/starter4.webp"
+
+[PROMPTS]
+PROMPT_1 = """
+# Example Prompt 1
+This is an example of a prompt. It can contain multiple lines and use Markdown formatting.
+
+## Key Points:
+1. Point 1
+2. Point 2
+3. Point 3
+
+Please replace this with your actual prompt content.
+"""
+
+PROMPT_2 = """
+# Example Prompt 2
+Another example prompt. Customize as needed.
+
+- Item 1
+- Item 2
+- Item 3
+
+Replace with your specific prompt instructions.
+"""

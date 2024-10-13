@@ -1,0 +1,43 @@
+# Byte编译后的Python文件
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 使用环境配置
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# 安装包
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+bin/
+var/
+sdist/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+lib/
+lib64/
+__pypackages__/
+
+# 本地配置
+*.local
+*config.json
+
+__pycache__/
+.files/
+
+logs
+/config.toml
+/trans_readme.py
