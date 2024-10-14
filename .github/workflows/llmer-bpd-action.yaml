@@ -1,0 +1,88 @@
+name: LLMER-BPD-Actions
+
+on:
+  push:
+    branches:
+      - test
+    tags:
+      - 'v*'
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        if: github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GAYHUB_USERNAME }}
+          password: ${{ secrets.CR_PAT }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Set image tag
+        id: tags
+        run: |
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          if [[ ${{ github.ref }} == refs/heads/main ]]; then
+            IMAGE_TAG="latest"
+            UNIQUE_TAG="${TIMESTAMP}-${SHORT_SHA}"
+            echo "DOCKER_HUB_TAG=${{ secrets.DOCKER_IMAGE_NAME }}/llmer:${IMAGE_TAG}" >> $GITHUB_ENV
+            echo "DOCKER_HUB_UNIQUE_TAG=${{ secrets.DOCKER_IMAGE_NAME }}/llmer:${UNIQUE_TAG}" >> $GITHUB_ENV
+            echo "GAYHUB_TAG_UNIQUE=ghcr.io/${{ secrets.GAYHUB_IMAGE_NAME }}/llmer:${UNIQUE_TAG}" >> $GITHUB_ENV
+            echo "GAYHUB_TAG=ghcr.io/${{ secrets.GAYHUB_IMAGE_NAME }}/llmer:latest" >> $GITHUB_ENV
+          else
+            IMAGE_TAG="test"
+            UNIQUE_TAG="${TIMESTAMP}-${SHORT_SHA}-test"
+            echo "DOCKER_HUB_TAG=${{ secrets.DOCKER_IMAGE_NAME }}/llmer:${IMAGE_TAG}" >> $GITHUB_ENV
+            echo "DOCKER_HUB_UNIQUE_TAG=${{ secrets.DOCKER_IMAGE_NAME }}/llmer:${UNIQUE_TAG}" >> $GITHUB_ENV
+          fi
+
+      - name: Build and publish image
+        run: |
+          TAGS="--tag ${{ env.DOCKER_HUB_TAG }} --tag ${{ env.DOCKER_HUB_UNIQUE_TAG }}"
+          if [[ ${{ github.ref }} == refs/heads/main ]]; then
+            TAGS+=" --tag ${{ env.GAYHUB_TAG }} --tag ${{ env.GAYHUB_TAG_UNIQUE }}"
+          fi
+          docker buildx build \
+            -f Dockerfile \
+            --platform linux/amd64 \
+            --label "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
+            --label "org.opencontainers.image.description=LLmer image" \
+            --push \
+            $TAGS \
+            .
+
+      - name: Deploy to main server
+        if: github.ref == 'refs/heads/main'
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.MAIN_HOST }}
+          port: ${{ secrets.MAIN_PORT }}
+          username: ${{ secrets.MAIN_SSH_USER }}
+          key: ${{ secrets.MAIN_ID_RSA }}
+          script: |
+            cpman -p ${{ secrets.MAIN_DEPLOY_PATH }}
+
+      - name: Deploy to test server
+        if: github.ref == 'refs/heads/test'
+        uses: appleboy/ssh-action@v1.1.0
+        with:
+          host: ${{ secrets.TEST_HOST }}
+          port: ${{ secrets.TEST_PORT }}
+          username: ${{ secrets.TEST_SSH_USER }}
+          key: ${{ secrets.TEST_ID_RSA }}
+          script: |
+            cpman -p ${{ secrets.TEST_DEPLOY_PATH }}
