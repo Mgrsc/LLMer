@@ -3,6 +3,7 @@ name: LLMER-BPD-Actions
 on:
   push:
     branches:
+      - main
       - test
     tags:
       - 'v*'
@@ -18,7 +19,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GitHub Container Registry
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -36,14 +37,17 @@ jobs:
         run: |
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           SHORT_SHA=$(git rev-parse --short HEAD)
-          if [[ ${{ github.ref }} == refs/heads/main ]]; then
+          if [[ ${{ github.ref }} == refs/heads/main || ${{ github.ref }} == refs/tags/* ]]; then
             IMAGE_TAG="latest"
+            if [[ ${{ github.ref }} == refs/tags/* ]]; then
+               IMAGE_TAG="${GITHUB_REF#refs/tags/}"
+            fi
             UNIQUE_TAG="${TIMESTAMP}-${SHORT_SHA}"
             echo "DOCKER_HUB_TAG=${{ secrets.DOCKER_IMAGE_NAME }}/llmer:${IMAGE_TAG}" >> $GITHUB_ENV
             echo "DOCKER_HUB_UNIQUE_TAG=${{ secrets.DOCKER_IMAGE_NAME }}/llmer:${UNIQUE_TAG}" >> $GITHUB_ENV
             echo "GAYHUB_TAG_UNIQUE=ghcr.io/${{ secrets.GAYHUB_IMAGE_NAME }}/llmer:${UNIQUE_TAG}" >> $GITHUB_ENV
-            echo "GAYHUB_TAG=ghcr.io/${{ secrets.GAYHUB_IMAGE_NAME }}/llmer:latest" >> $GITHUB_ENV
-          else
+            echo "GAYHUB_TAG=ghcr.io/${{ secrets.GAYHUB_IMAGE_NAME }}/llmer:${IMAGE_TAG}" >> $GITHUB_ENV
+          elif [[ ${{ github.ref }} == refs/heads/test ]]; then
             IMAGE_TAG="test"
             UNIQUE_TAG="${TIMESTAMP}-${SHORT_SHA}-test"
             echo "DOCKER_HUB_TAG=${{ secrets.DOCKER_IMAGE_NAME }}/llmer:${IMAGE_TAG}" >> $GITHUB_ENV
@@ -53,7 +57,7 @@ jobs:
       - name: Build and publish image
         run: |
           TAGS="--tag ${{ env.DOCKER_HUB_TAG }} --tag ${{ env.DOCKER_HUB_UNIQUE_TAG }}"
-          if [[ ${{ github.ref }} == refs/heads/main ]]; then
+          if [[ ${{ github.ref }} == refs/heads/main || ${{ github.ref }} == refs/tags/* ]]; then
             TAGS+=" --tag ${{ env.GAYHUB_TAG }} --tag ${{ env.GAYHUB_TAG_UNIQUE }}"
           fi
           docker buildx build \
@@ -66,7 +70,7 @@ jobs:
             .
 
       - name: Deploy to main server
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         uses: appleboy/ssh-action@v1.1.0
         with:
           host: ${{ secrets.MAIN_HOST }}
