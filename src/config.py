@@ -65,8 +65,8 @@ async def chat_profile():
     profiles = []
     for model_key, model_info in config.get('MODEL_MAP', {}).items():
         profiles.append(cl.ChatProfile(
-            name=model_info.get('profile_name', '默认名称'),
-            markdown_description=model_info.get('markdown_description', '默认描述'),
+            name=model_info.get('profile_name', 'Deepseek'),
+            markdown_description=model_info.get('markdown_description', 'error'),
             icon=model_info.get('icon', '/default/icon.webp')
         ))
     return profiles
@@ -75,7 +75,7 @@ async def chat_profile():
 def get_model_for_profile(chat_profile: str) -> str:
     for model_info in config.get('MODEL_MAP', {}).values():
         if model_info.get('profile_name') == chat_profile:
-            return model_info.get('model_name', 'default_model')
-    return "default_model"
+            return model_info.get('model_name', 'gpt-4o-mini')
+    return "gpt-4o-mini"
 
 

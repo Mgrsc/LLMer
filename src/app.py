@@ -1,8 +1,8 @@
 import chainlit as cl
-from config import (get_content_for_starter, 
-                    get_model_for_profile, 
-                    prompt_dict, 
-                    CHAT_SETTINGS, 
+from config import (get_content_for_starter,
+                    get_model_for_profile,
+                    prompt_dict,
+                    CHAT_SETTINGS,
                     LLM)
 from utils.logger import logger
 from chainlit.config import config
@@ -11,7 +11,7 @@ from chainlit.config import config
 @cl.on_chat_start
 def start_chat():
     cl.user_session.set("is_new_session", True)
-    
+
 # Construct a new conversation setting system prompt.
 async def handle_new_session(user_input: str):
     matched = False
@@ -21,11 +21,11 @@ async def handle_new_session(user_input: str):
             content = get_content_for_starter(starter.label)
             cl.user_session.set("message_history", [{"role": "system", "content": content}])
             break
-    
+
     if not matched:
         default_prompt = next(iter(prompt_dict.values()), "Can I help you?")
         cl.user_session.set("message_history", [{"role": "system", "content": default_prompt}])
-    
+
     cl.user_session.set("is_new_session", False)
 
 # main logic ,receive message will call this function
@@ -36,7 +36,7 @@ async def main(message: cl.Message):
     # Get and update message history
     message_history = cl.user_session.get("message_history")
 
-    
+
     # If it is a new session, get prompt
     if message_history is None or is_new_session:
         await handle_new_session(message.content)
@@ -62,14 +62,26 @@ async def main(message: cl.Message):
             messages=message_history, stream=True, model=model, **CHAT_SETTINGS
         )
 
+        full_response = ""
         async for part in stream:
-            if part.choices and part.choices[0].delta.content:
-                token = part.choices[0].delta.content
-                await msg.stream_token(token)
+            if not part.choices:
+                continue
 
-        message_history.append({"role": "assistant", "content": msg.content})
+            delta = part.choices[0].delta
+            if not delta:
+                continue
+
+            content = getattr(delta, 'content', None)
+            if content:
+                full_response += content
+                await msg.stream_token(content)
+            elif hasattr(delta, 'finish_reason'):
+                break
+
+
+        message_history.append({"role": "assistant", "content": full_response})
         await msg.update()
     except Exception as e:
         logger.error(f"Error during LLM completion: {e}")
-        await msg.update(content="抱歉，处理您的请求时出错了。请稍后再试。")
+        await msg.update(content="Sorry, an error occurred while processing your request. Please try again later.")
 
