@@ -8,6 +8,9 @@ LABEL maintainer="mgrsc <mail@occult.ac.cn>"
 
 WORKDIR /app
 
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 ENV PATH="/app/.venv/bin:$PATH"
