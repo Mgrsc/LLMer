@@ -6,4 +6,5 @@ services:
       - 30004:8000
     volumes:
       - ./config.toml:/app/config.toml
-      # - ./src/public/model:/app/src/public/model # option
+      # - ./icon:/app/icon # option
+      # - ./model:/app/model # option

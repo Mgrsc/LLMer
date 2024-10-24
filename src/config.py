@@ -38,13 +38,17 @@ starters = config.get('STARTERS', {})
 async def choice_role():
     starter_list = []
     i = 1
+    icon_path = "/public/icons/"
     while f'START_{i}_LABEL' in starters:
-        starter_list.append(cl.Starter(
-            label=starters.get(f'START_{i}_LABEL', f"label{i}"),
-            message=starters.get(f'START_{i}_MESSAGE', f"message{i}"),
-            icon=starters.get(f'START_{i}_ICON', f"/default/icon{i}.webp")
-        ))
+        starter_list.append(
+            cl.Starter(
+                label=starters.get(f'START_{i}_LABEL', f"label{i}"),
+                message=starters.get(f'START_{i}_MESSAGE', f"message{i}"),
+                icon=icon_path + starters.get(f'START_{i}_ICON', 'zhexue.webp')
+            )
+        )
         i += 1
+        print(starter_list)
     return starter_list
 
 # Get the prompt of the corresponding role
@@ -53,7 +57,7 @@ def get_content_for_starter(label: str) -> str:
     i = 1
     while f'START_{i}_LABEL' in starters:
         prompt_key = f'PROMPT_{i+1}'
-        content_mapping[starters.get(f'START_{i}_LABEL', f"Thought Chain")] = prompts.get(prompt_key, f"I am Thought Chain, can I help you?")
+        content_mapping[starters.get(f'START_{i}_LABEL', "Hello")] = prompts.get(prompt_key, f"you are assistant")
         i += 1
 
     default_prompt = next(iter(prompt_dict.values()), "Can I help you?")
@@ -63,11 +67,12 @@ def get_content_for_starter(label: str) -> str:
 @cl.set_chat_profiles
 async def chat_profile():
     profiles = []
+    icon_path = "/public/model/"
     for model_key, model_info in config.get('MODEL_MAP', {}).items():
         profiles.append(cl.ChatProfile(
             name=model_info.get('profile_name', 'Deepseek'),
             markdown_description=model_info.get('markdown_description', 'error'),
-            icon=model_info.get('icon', '/default/icon.webp')
+            icon=icon_path + model_info.get('icon', 'openai.svg')
         ))
     return profiles
 

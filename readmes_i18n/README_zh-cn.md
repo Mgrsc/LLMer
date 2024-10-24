@@ -22,13 +22,13 @@
 profile_name = "Model A" # 显示的模型名字
 model_name = "model-a" # 真实的模型名字
 markdown_description = "Description of Model A" # 模型描述
-icon = "/public/model/model-a.svg" # 模型图标
+icon = "model-a.svg" # 模型图标，默认存放在model下
 
 # starter设置，最多四个starter
-[STARTERS] 
+[STARTERS]
 START_1_LABEL = "专业文案助手" # starter在ui显示的内容
 START_1_MESSAGE = "帮我写一个文案！大师" # starter启动时发送的消息
-START_1_ICON = "/public/icons/copywriter.webp" # starter的图标
+START_1_ICON = "copywriter.webp" # starter的图标，默认存放再icons下
 
 # 一个prompt对应一个starter，第一个prompt_1为默认prompt
 # 从第二个开始prompt_2对应stater的第一个prompt，必须和starter的数量对应
@@ -78,7 +78,8 @@ services:
       - 30004:8000
     volumes:
       - ./config.toml:/app/config.toml
-      # - ./src/public/model:/app/src/public/model # 可选，如需增加图标
+      # - ./icon:/app/icon # 可选，如需修改starter图标
+      # - ./model:/app/model  # 可选，如需增加图标
 ```
 ```shell
 docker-compose up -d
