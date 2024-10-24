@@ -42,13 +42,12 @@ async def choice_role():
     while f'START_{i}_LABEL' in starters:
         starter_list.append(
             cl.Starter(
-                label=starters.get(f'START_{i}_LABEL', f"label{i}"),
-                message=starters.get(f'START_{i}_MESSAGE', f"message{i}"),
+                label=starters.get(f'START_{i}_LABEL', "assistant"),
+                message=starters.get(f'START_{i}_MESSAGE', "start"),
                 icon=icon_path + starters.get(f'START_{i}_ICON', 'zhexue.webp')
             )
         )
         i += 1
-        print(starter_list)
     return starter_list
 
 # Get the prompt of the corresponding role
@@ -56,11 +55,10 @@ def get_content_for_starter(label: str) -> str:
     content_mapping = {}
     i = 1
     while f'START_{i}_LABEL' in starters:
-        prompt_key = f'PROMPT_{i+1}'
-        content_mapping[starters.get(f'START_{i}_LABEL', "Hello")] = prompts.get(prompt_key, f"you are assistant")
+        prompt_key = f'PROMPT_{i}'
+        content_mapping[starters.get(f'START_{i}_LABEL', "assistant")] = prompts.get(prompt_key, "you are assistant")
         i += 1
-
-    default_prompt = next(iter(prompt_dict.values()), "Can I help you?")
+    default_prompt = prompts.get("PROMPT_DEFAULT", "you are assistant")
     return content_mapping.get(label, default_prompt)
 
 # setting profiles
@@ -70,17 +68,18 @@ async def chat_profile():
     icon_path = "/public/model/"
     for model_key, model_info in config.get('MODEL_MAP', {}).items():
         profiles.append(cl.ChatProfile(
-            name=model_info.get('profile_name', 'Deepseek'),
-            markdown_description=model_info.get('markdown_description', 'error'),
+            name=model_key,
+            markdown_description=model_info.get('markdown_description', 'none'),
             icon=icon_path + model_info.get('icon', 'openai.svg')
         ))
     return profiles
 
 # get model for profile
 def get_model_for_profile(chat_profile: str) -> str:
-    for model_info in config.get('MODEL_MAP', {}).values():
-        if model_info.get('profile_name') == chat_profile:
-            return model_info.get('model_name', 'gpt-4o-mini')
+    model_map = config.get('MODEL_MAP', {})
+    if model_map.get(chat_profile):
+        model_name = model_map.get(chat_profile).get('model_name', 'gpt-4o-mini')
+        return model_name
     return "gpt-4o-mini"
 
 
