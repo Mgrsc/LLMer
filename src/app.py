@@ -7,10 +7,6 @@ from config import (get_content_for_starter,
 from utils.logger import logger
 from chainlit.config import config
 
-# setting default tag and history
-@cl.on_chat_start
-def start_chat():
-    cl.user_session.set("is_new_session", True)
 
 # Construct a new conversation setting system prompt.
 async def handle_new_session(user_input: str):
@@ -27,6 +23,11 @@ async def handle_new_session(user_input: str):
         cl.user_session.set("message_history", [{"role": "system", "content": default_prompt}])
 
     cl.user_session.set("is_new_session", False)
+
+# setting default tag and history
+@cl.on_chat_start
+def start_chat():
+    cl.user_session.set("is_new_session", True)
 
 # main logic ,receive message will call this function
 @cl.on_message

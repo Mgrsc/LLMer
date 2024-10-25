@@ -76,10 +76,5 @@ async def chat_profile():
 
 # get model for profile
 def get_model_for_profile(chat_profile: str) -> str:
-    model_map = config.get('MODEL_MAP', {})
-    if model_map.get(chat_profile):
-        model_name = model_map.get(chat_profile).get('model_name', 'gpt-4o-mini')
-        return model_name
-    return "gpt-4o-mini"
-
+    return config.get('MODEL_MAP', {}).get(chat_profile, {}).get('model_name', 'gpt-4o-mini')
 
